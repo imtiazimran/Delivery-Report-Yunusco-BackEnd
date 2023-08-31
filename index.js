@@ -100,49 +100,54 @@ async function run() {
 
 // handle partial delivery
 
-    app.put("/updatePartialDelivery/:id", async (req, res) => {
-      const jobId = req.params.id;
-      const { partialDeliveryQty } = req.body;
-    
-      const query = { _id: new ObjectId(jobId) };
-    
-      try {
-        // Find the job in HTLDelivery collection
-        const job = await HTLDelivery.findOne(query);
-        if (!job) {
-          res.status(404).send("Job not found.");
-          return;
-        }
-    
-        // Check if the partial delivery quantity is valid
-        if (partialDeliveryQty <= 0 || partialDeliveryQty > job.qty) {
-          res.status(400).send("Invalid partial delivery quantity.");
-          return;
-        }
-    
-        // Update the job's delivered and balance quantities
-        const remainingQty = job.qty - partialDeliveryQty;
-        const deliveredQty = job.qty - remainingQty;
-    
-        // Insert the partial delivery job into Delivered collection
-        const deliveryDate = new Date();
-        const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
-        const partialDeliveryJob = {
-          ...job,
-          qty: deliveredQty, // Update the qty field
-          goodsDeliveryDate,
-        };
-        await Delivered.insertOne(partialDeliveryJob);
-    
-        // Update the remaining quantity in HTLDelivery collection
-        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty } });
-    
-        res.send("Partial delivery marked successfully.");
-      } catch (error) {
-        console.error("Error marking partial delivery:", error);
-        res.status(500).send("Internal server error.");
-      }
-    });
+app.put("/updatePartialDelivery/:id", async (req, res) => {
+  const jobId = req.params.id;
+  const { partialDeliveryQty } = req.body;
+
+  const query = { _id: new ObjectId(jobId) };
+
+  try {
+    // Find the job in HTLDelivery collection
+    const job = await HTLDelivery.findOne(query);
+    if (!job) {
+      res.status(404).send("Job not found.");
+      return;
+    }
+
+    // Check if the partial delivery quantity is valid
+    if (partialDeliveryQty <= 0 || partialDeliveryQty > job.qty) {
+      res.status(400).send("Invalid partial delivery quantity.");
+      return;
+    }
+
+    // Create a new _id for the partial delivery document
+    const partialDeliveryId = new ObjectId();
+    const deliveryDate = new Date();
+    const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
+    // Create the partial delivery document
+    const partialDelivery = {
+      _id: partialDeliveryId,
+      customar: job.customar,
+      po: job.po,
+      qty: partialDeliveryQty, // Use the partial delivery quantity
+      label: job.label,
+      goodsDeliveryDate: goodsDeliveryDate // Use the current date as delivery date
+    };
+
+    // Insert the partial delivery document into Delivered collection
+    await Delivered.insertOne(partialDelivery);
+
+    // Update the remaining quantity in HTLDelivery collection
+    const remainingQty = job.qty - partialDeliveryQty;
+    await HTLDelivery.updateOne(query, { $set: { qty: remainingQty } });
+
+    res.send("Partial delivery marked successfully.");
+  } catch (error) {
+    console.error("Error marking partial delivery:", error);
+    res.status(500).send("Internal server error.");
+  }
+});
+
     
 
 
