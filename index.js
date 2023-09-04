@@ -148,7 +148,7 @@ async function run() {
 
         // Update the remaining quantity in HTLDelivery collection
         const remainingQty = job.qty - partialDeliveryQty;
-        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty } });
+        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial"} });
 
         res.send("Partial delivery marked successfully.");
       } catch (error) {
