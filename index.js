@@ -169,7 +169,7 @@ async function run() {
     })
 
     app.get("/delivered", async (req, res) => {
-      const allDelivered = await Delivered.find().toArray()
+      const allDelivered = await Delivered.find().sort({goodsDeliveryDate : 1}).toArray()
       res.send(allDelivered)
     })
 
