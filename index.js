@@ -56,7 +56,7 @@ async function run() {
 
     // display the delivery lists
     app.get("/delivery", async (req, res) => {
-      const allDelivery = await HTLDelivery.find().toArray()
+      const allDelivery = await HTLDelivery.find().sort({goodsDeliveryDate: 1}).toArray()
       res.send(allDelivery)
     })
 
