@@ -148,7 +148,7 @@ async function run() {
 
         // Update the remaining quantity in HTLDelivery collection
         const remainingQty = job.qty - partialDeliveryQty;
-        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial"} });
+        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial" } });
 
         res.send("Partial delivery marked successfully.");
       } catch (error) {
@@ -169,7 +169,7 @@ async function run() {
     })
 
     app.get("/delivered", async (req, res) => {
-      const allDelivered = await Delivered.find().sort({goodsDeliveryDate : 1}).toArray()
+      const allDelivered = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray()
       res.send(allDelivered)
     })
 
