@@ -60,6 +60,8 @@ async function run() {
       res.send(allDelivery)
     })
 
+
+
     // handle delivery
     app.put("/markDelivered/:id", async (req, res) => {
       const jobId = req.params.id;
@@ -168,11 +170,22 @@ async function run() {
       res.send(result)
     })
 
+    // handle all Delivered Job List
     app.get("/delivered", async (req, res) => {
       const allDelivered = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray()
       res.send(allDelivered)
     })
 
+    // handle Edited Job
+    app.put("/editedJob/:id", async (req, res) => {
+      const jobId = req.params.id;
+      const query = { _id: new ObjectId(jobId) };
+      const { updatedQuantity, updatedDeliveryDate } = req.body;
+
+      const result = await Delivered.updateOne(query, {$set :{qty : updatedQuantity, goodsDeliveryDate : updatedDeliveryDate }})
+      res.send(result)
+
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
