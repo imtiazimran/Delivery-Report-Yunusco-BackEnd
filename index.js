@@ -56,7 +56,7 @@ async function run() {
 
     // display the delivery lists
     app.get("/delivery", async (req, res) => {
-      const allDelivery = await HTLDelivery.find().toArray()
+      const allDelivery = await HTLDelivery.find().sort({ JobAddDate: -1 }).toArray()
       res.send(allDelivery)
     })
 
@@ -182,7 +182,7 @@ async function run() {
       const query = { _id: new ObjectId(jobId) };
       const { updatedQuantity, updatedDeliveryDate } = req.body;
 
-      const result = await Delivered.updateOne(query, {$set :{qty : updatedQuantity, goodsDeliveryDate : updatedDeliveryDate }})
+      const result = await Delivered.updateOne(query, { $set: { qty: updatedQuantity, goodsDeliveryDate: updatedDeliveryDate } })
       res.send(result)
 
     })
