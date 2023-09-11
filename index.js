@@ -161,12 +161,21 @@ async function run() {
 
 
 
-
+    // handle Delete Proccesing job
     app.delete("/deleteJob/:id", async (req, res) => {
       const jobId = req.params.id
-      console.log(jobId)
+      // console.log("from Proccesing:",jobId)
       const query = { _id: new ObjectId(jobId) }
       const result = await HTLDelivery.deleteOne(query)
+      res.send(result)
+    })
+
+    // handle Delete Delivered job
+    app.delete("/deleteDeliveredJob/:id", async (req, res) => {
+      const jobId = req.params.id
+      const query = { _id: new ObjectId(jobId) }
+      // console.log("from Delivered:",jobId, "query:", query)
+      const result = await Delivered.deleteOne(query)
       res.send(result)
     })
 
