@@ -20,7 +20,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-
+const deliveryDate = new Date();
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -29,6 +29,26 @@ async function run() {
     const DB = client.db('DeliveryReport')
     const HTLDelivery = DB.collection("HTL")
     const Delivered = DB.collection('DELIVERED')
+    const User = DB.collection('USER')
+
+
+
+
+    // store user 
+    app.post('/postUser', async (req, res) => {
+      const newUser = req.body;
+      // check if user exist with same email
+      const existingUser = await User.findOne({ email: newUser.email })
+
+      console.log("newUser:", newUser, "existing User:", existingUser);
+      if (existingUser) {
+        res.status(400).send("user already register with this email")
+        return
+      }
+      const result = await User.insertOne(newUser)
+      res.send(result)
+
+    })
 
     app.post("/addJobs", async (req, res) => {
       const newJob = req.body;
@@ -42,8 +62,6 @@ async function run() {
 
 
       // Get the current date
-      const deliveryDate = new Date();
-
       const JobAddDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
 
       // Insert the new job if 'po' is unique
@@ -86,19 +104,18 @@ async function run() {
         delete job._id;
 
         // Get the current date
-        const deliveryDate = new Date();
 
         const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
 
 
-
-
+        
         // Insert the job into Delivered collection along with the delivery date
         const result = await Delivered.insertOne({
           ...job,
           goodsDeliveryDate, // Add the delivery date to the document
         });
-
+        
+        console.log(goodsDeliveryDate);
         // Delete the job from HTLDelivery collection
         await HTLDelivery.deleteOne(query);
 
@@ -196,6 +213,8 @@ async function run() {
 
     })
 
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -212,5 +231,5 @@ app.get("/", (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Hazi Yunus Is Running On Port: ${port}`)
+  console.log(`Hazi Yunus Is Running On Port: ${port}`, deliveryDate)
 })
