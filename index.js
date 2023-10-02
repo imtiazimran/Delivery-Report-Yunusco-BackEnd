@@ -57,7 +57,6 @@ async function run() {
 
     app.post("/addJobs", async (req, res) => {
       const newJob = req.body;
-console.log(newJob);
       // Check if the job with the same 'po' already exists
       const existingJob = await HTLDelivery.findOne({ po: newJob.po });
       if (existingJob) {
@@ -89,7 +88,6 @@ console.log(newJob);
     app.put("/markDelivered/:id", async (req, res) => {
       const jobId = req.params.id;
       const query = { _id: new ObjectId(jobId) };
-console.log();
       try {
         // Find the job in HTLDelivery collection
         const job = await HTLDelivery.findOne(query);
@@ -136,7 +134,6 @@ console.log();
     app.put("/updatePartialDelivery/:id", async (req, res) => {
       const jobId = req.params.id;
       const { partialDeliveryQty } = req.body;
-
       const query = { _id: new ObjectId(jobId) };
 
       try {
@@ -164,7 +161,7 @@ console.log();
           po: job.po,
           qty: partialDeliveryQty, // Use the partial delivery quantity
           label: job.label,
-          goodsDeliveryDate: goodsDeliveryDate // Use the current date as delivery date
+          goodsDeliveryDate: goodsDeliveryDate, // Use the current date as delivery date
         };
 
         // Insert the partial delivery document into Delivered collection
@@ -172,7 +169,7 @@ console.log();
 
         // Update the remaining quantity in HTLDelivery collection
         const remainingQty = job.qty - partialDeliveryQty;
-        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial" } });
+        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial"} });
 
         res.send("Partial delivery marked successfully.");
       } catch (error) {
