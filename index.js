@@ -49,10 +49,15 @@ async function run() {
       res.send(result)
 
     })
+    // get users
+    app.get('/users', async(req, res) =>{
+      const result = await User.find().toArray()
+      res.send(result)
+    })
 
     app.post("/addJobs", async (req, res) => {
       const newJob = req.body;
-
+console.log(newJob);
       // Check if the job with the same 'po' already exists
       const existingJob = await HTLDelivery.findOne({ po: newJob.po });
       if (existingJob) {
@@ -84,7 +89,7 @@ async function run() {
     app.put("/markDelivered/:id", async (req, res) => {
       const jobId = req.params.id;
       const query = { _id: new ObjectId(jobId) };
-
+console.log();
       try {
         // Find the job in HTLDelivery collection
         const job = await HTLDelivery.findOne(query);
