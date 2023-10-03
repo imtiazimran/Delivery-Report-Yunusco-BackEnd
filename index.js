@@ -56,7 +56,7 @@ async function run() {
     // find logged User
     app.get('/users/:email', async(req, res) =>{
       const userEmail = req.params.email;
-      const result = await User.findOne({email : })
+      const result = await User.findOne({email : userEmail })
       res.send(result)
     })
 
