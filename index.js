@@ -40,7 +40,6 @@ async function run() {
       // check if user exist with same email
       const existingUser = await User.findOne({ email: newUser.email })
 
-      console.log("newUser:", newUser, "existing User:", existingUser);
       if (existingUser) {
         res.status(400).send("user already register with this email")
         return
@@ -52,6 +51,12 @@ async function run() {
     // get users
     app.get('/users', async(req, res) =>{
       const result = await User.find().toArray()
+      res.send(result)
+    })
+    // find logged User
+    app.get('/users/:email', async(req, res) =>{
+      const userEmail = req.params.email;
+      const result = await User.findOne({email : })
       res.send(result)
     })
 
