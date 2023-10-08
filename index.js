@@ -113,7 +113,7 @@ async function run() {
 
         // Get the current date
 
-        const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
+        const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
 
 
         
@@ -122,6 +122,7 @@ async function run() {
           ...job,
           goodsDeliveryDate, // Add the delivery date to the document
         });
+        console.log(goodsDeliveryDate);
         // Delete the job from HTLDelivery collection
         await HTLDelivery.deleteOne(query);
 
