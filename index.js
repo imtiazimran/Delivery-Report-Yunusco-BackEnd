@@ -122,8 +122,6 @@ async function run() {
           ...job,
           goodsDeliveryDate, // Add the delivery date to the document
         });
-        
-        console.log(goodsDeliveryDate);
         // Delete the job from HTLDelivery collection
         await HTLDelivery.deleteOne(query);
 
