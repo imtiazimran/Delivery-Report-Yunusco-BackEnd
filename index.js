@@ -20,7 +20,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-const deliveryDate = new Date();
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -49,14 +49,14 @@ async function run() {
 
     })
     // get users
-    app.get('/users', async(req, res) =>{
+    app.get('/users', async (req, res) => {
       const result = await User.find().toArray()
       res.send(result)
     })
     // find logged User
-    app.get('/isAdmin/:email', async(req, res) =>{
+    app.get('/isAdmin/:email', async (req, res) => {
       const userEmail = req.params.email;
-      const result = await User.findOne({email : userEmail })
+      const result = await User.findOne({ email: userEmail })
       res.send(result)
     })
 
@@ -69,9 +69,11 @@ async function run() {
         return;
       }
 
+      const deliveryDate = new Date();
+      console.log(deliveryDate);
 
       // Get the current date
-      const JobAddDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
+      const JobAddDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} `;
 
       // Insert the new job if 'po' is unique
       const result = await HTLDelivery.insertOne({
@@ -113,10 +115,14 @@ async function run() {
 
         // Get the current date
 
+
+        const deliveryDate = new Date();
+        console.log(deliveryDate);
+
         const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
 
 
-        
+
         // Insert the job into Delivered collection along with the delivery date
         const result = await Delivered.insertOne({
           ...job,
@@ -173,7 +179,7 @@ async function run() {
 
         // Update the remaining quantity in HTLDelivery collection
         const remainingQty = job.qty - partialDeliveryQty;
-        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial"} });
+        await HTLDelivery.updateOne(query, { $set: { qty: remainingQty, deliveryType: "partial" } });
 
         res.send("Partial delivery marked successfully.");
       } catch (error) {
@@ -237,5 +243,5 @@ app.get("/", (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Hazi Yunus Is Running On Port: ${port}`, deliveryDate)
+  console.log(`Hazi Yunus Is Running On Port: ${port}`)
 })
