@@ -21,6 +21,9 @@ const client = new MongoClient(uri, {
   }
 });
 
+const currentDate = new Date()
+console.log(currentDate);
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -69,17 +72,18 @@ async function run() {
         return;
       }
 
-      const deliveryDate = new Date();
-      console.log(deliveryDate);
+      const currentDate = new Date();
+     
 
       // Get the current date
-      const JobAddDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} `;
+      const JobAddDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
 
       // Insert the new job if 'po' is unique
       const result = await HTLDelivery.insertOne({
         ...newJob,
         JobAddDate,
       });
+      console.log(JobAddDate,deliveryDate);
       res.send(result);
     });
 
@@ -117,7 +121,6 @@ async function run() {
 
 
         const deliveryDate = new Date();
-        console.log(deliveryDate);
 
         const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
 
@@ -128,7 +131,7 @@ async function run() {
           ...job,
           goodsDeliveryDate, // Add the delivery date to the document
         });
-        console.log(goodsDeliveryDate);
+        console.log(goodsDeliveryDate, deliveryDate);
         // Delete the job from HTLDelivery collection
         await HTLDelivery.deleteOne(query);
 
@@ -210,9 +213,15 @@ async function run() {
 
     // handle all Delivered Job List
     app.get("/delivered", async (req, res) => {
-      const allDelivered = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray()
-      res.send(allDelivered)
-    })
+      try {
+        const allDelivered = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray();
+        res.send(allDelivered);
+      } catch (error) {
+        // Handle any errors that occur during the database query
+        console.error(error);
+        res.status(500).send("An error occurred while fetching data.");
+      }
+    });
 
     // handle Edited Job
     app.put("/editedJob/:id", async (req, res) => {
