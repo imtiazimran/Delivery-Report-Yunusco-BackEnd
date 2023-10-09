@@ -21,8 +21,6 @@ const client = new MongoClient(uri, {
   }
 });
 
-const currentDate = new Date()
-console.log(currentDate);
 
 async function run() {
   try {
@@ -131,7 +129,6 @@ async function run() {
           ...job,
           goodsDeliveryDate, // Add the delivery date to the document
         });
-        console.log(goodsDeliveryDate, deliveryDate);
         // Delete the job from HTLDelivery collection
         await HTLDelivery.deleteOne(query);
 
@@ -166,7 +163,7 @@ async function run() {
         // Create a new _id for the partial delivery document
         const partialDeliveryId = new ObjectId();
         const deliveryDate = new Date();
-        const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()} ${deliveryDate.getHours().toString().padStart(2, '0')}:${deliveryDate.getMinutes().toString().padStart(2, '0')}:${deliveryDate.getSeconds().toString().padStart(2, '0')}`;
+        const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
         // Create the partial delivery document
         const partialDelivery = {
           _id: partialDeliveryId,
