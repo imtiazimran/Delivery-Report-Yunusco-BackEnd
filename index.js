@@ -71,7 +71,7 @@ async function run() {
       }
 
       const currentDate = new Date();
-     
+
 
       // Get the current date
       const JobAddDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
@@ -81,7 +81,7 @@ async function run() {
         ...newJob,
         JobAddDate,
       });
-      console.log(JobAddDate,deliveryDate);
+      console.log(JobAddDate, deliveryDate);
       res.send(result);
     });
 
@@ -210,15 +210,29 @@ async function run() {
 
     // handle all Delivered Job List
     app.get("/delivered", async (req, res) => {
-      try {
-        const allDelivered = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray();
-        res.send(allDelivered);
-      } catch (error) {
-        // Handle any errors that occur during the database query
-        console.error(error);
-        res.status(500).send("An error occurred while fetching data.");
-      }
+      const result = await Delivered.find().toArray()
+
+      res.send(result);
     });
+    // app.get("/delivered", async (req, res) => {
+    //   const { month } = req.query;
+    //   let filteredDeliveredJobs;
+
+    //   console.log(month);
+    //   if (month) {
+    //     // If the month query parameter is provided, filter delivered jobs by the selected month
+    //     filteredDeliveredJobs = await Delivered.find({
+    //       goodsDeliveryDate: { $regex: new RegExp(`\\d{2}-(0?${month})-\\d{4}`), },
+    //     }).toArray();
+    //   } else {
+    //     // If no month is specified, fetch all delivered jobs
+    //     filteredDeliveredJobs = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray();
+    //   }
+
+    //   res.send(filteredDeliveredJobs);
+    // });
+
+
 
     // handle Edited Job
     app.put("/editedJob/:id", async (req, res) => {
