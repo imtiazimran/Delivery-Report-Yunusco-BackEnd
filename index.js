@@ -197,7 +197,7 @@ async function run() {
       const query = { _id: new ObjectId(jobId) }
       const result = await HTLDelivery.deleteOne(query)
       res.send(result)
-    })
+    }) 
 
     // handle Delete Delivered job
     app.delete("/deleteDeliveredJob/:id", async (req, res) => {
