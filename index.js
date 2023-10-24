@@ -61,6 +61,32 @@ async function run() {
       res.send(result)
     })
 
+    // update User Role as admin
+    app.patch('/user/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await User.updateOne(query, { $set: { role : "Admin" } });
+      res.send(result)
+    })
+    
+    // update User as editor
+    app.patch('/user/editor/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await User.updateOne(query, { $set: { role : "Editor" } });
+      res.send(result)
+    })
+
+    // delete User 
+    app.delete('/user/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await User.deleteOne(query);
+      res.send(result)
+    })
+
+
+    // add jobs
     app.post("/addJobs", async (req, res) => {
       const newJob = req.body;
       // Check if the job with the same 'po' already exists
@@ -116,9 +142,7 @@ async function run() {
         delete job._id;
 
         // Get the current date
-
-
-        const deliveryDate = new Date();
+ const deliveryDate = new Date();
 
         const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
 
@@ -197,7 +221,7 @@ async function run() {
       const query = { _id: new ObjectId(jobId) }
       const result = await HTLDelivery.deleteOne(query)
       res.send(result)
-    }) 
+    })
 
     // handle Delete Delivered job
     app.delete("/deleteDeliveredJob/:id", async (req, res) => {
