@@ -68,7 +68,7 @@ async function run() {
       const result = await User.updateOne(query, { $set: { role : "Admin" } });
       res.send(result)
     })
-    
+     
     // update User as editor
     app.patch('/user/editor/:id', async (req, res) => {
       const id = req.params.id;
