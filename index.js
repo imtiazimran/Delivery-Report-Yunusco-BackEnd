@@ -107,7 +107,6 @@ async function run() {
         ...newJob,
         JobAddDate,
       });
-      console.log(JobAddDate, deliveryDate);
       res.send(result);
     });
 
