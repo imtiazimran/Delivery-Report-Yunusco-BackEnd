@@ -30,6 +30,7 @@ async function run() {
     const DB = client.db('DeliveryReport')
     const HTLDelivery = DB.collection("HTL")
     const Delivered = DB.collection('DELIVERED')
+    const Sample = DB.collection('SAMPLE')
     const User = DB.collection('USER')
 
 
@@ -65,22 +66,22 @@ async function run() {
     app.patch('/user/admin/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
-      const result = await User.updateOne(query, { $set: { role : "Admin" } });
+      const result = await User.updateOne(query, { $set: { role: "Admin" } });
       res.send(result)
     })
-     
+
     // update User as editor
     app.patch('/user/editor/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
-      const result = await User.updateOne(query, { $set: { role : "Editor" } });
+      const result = await User.updateOne(query, { $set: { role: "Editor" } });
       res.send(result)
     })
 
     // delete User 
-    app.delete('/user/:id', async(req, res)=>{
+    app.delete('/user/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await User.deleteOne(query);
       res.send(result)
     })
@@ -116,6 +117,34 @@ async function run() {
       res.send(allDelivery)
     })
 
+    // ---------------------------------------------------------------------------------------------------
+    app.get('/sample', async (req, res) => {
+      const result = await Sample.find().toArray()
+      res.send(result)
+    })
+    // sample entry
+    app.post('/sampleEntry', async (req, res) => {
+      const newSample = req.body
+      const result = await Sample.insertOne(newSample)
+      res.send(result)
+    })
+
+    // update sample
+    app.put('/updateSample/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const newSample = req.body
+      const result = await Sample.updateOne(query, { $set: newSample })
+      res.send(result)
+    })
+
+    // delete sample
+    app.delete('/deleteSample/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await Sample.deleteOne(query)
+      res.send(result)
+    })
 
 
     // handle delivery
@@ -141,7 +170,7 @@ async function run() {
         delete job._id;
 
         // Get the current date
- const deliveryDate = new Date();
+        const deliveryDate = new Date();
 
         const goodsDeliveryDate = `${deliveryDate.getDate().toString().padStart(2, '0')}-${(deliveryDate.getMonth() + 1).toString().padStart(2, '0')}-${deliveryDate.getFullYear()}`;
 
@@ -229,7 +258,7 @@ async function run() {
         await HTLDelivery.insertOne({
           ...pdData,
           qty: remainingQty,
-          deliveryType: "partial" 
+          deliveryType: "partial"
         })
 
         res.send("Partial delivery marked successfully.");
