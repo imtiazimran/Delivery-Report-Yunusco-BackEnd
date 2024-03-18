@@ -123,7 +123,7 @@ async function run() {
       res.send(result)
     })
     // sample entry
-    app.post('/sampleEntry', async (req, res) => {
+    app.post('/addSample', async (req, res) => {
       const newSample = req.body
       const result = await Sample.insertOne(newSample)
       res.send(result)
