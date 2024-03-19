@@ -131,12 +131,15 @@ async function run() {
 
     // update sample
     app.put('/updateSample/:id', async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const newSample = req.body
-      const result = await Sample.updateOne(query, { $set: newSample })
-      res.send(result)
-    })
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const newSample = req.body;
+      // Exclude _id field from the update
+      delete newSample._id;
+      const result = await Sample.updateOne(query, { $set: newSample });
+      res.send(result);
+    });
+
 
     // delete sample
     app.delete('/deleteSample/:id', async (req, res) => {
