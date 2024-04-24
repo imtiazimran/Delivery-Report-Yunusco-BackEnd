@@ -85,7 +85,7 @@ async function run() {
       const result = await User.deleteOne(query);
       res.send(result)
     })
-
+// --------------------------------------------------------------------------------------------------------------------------
 
     // add jobs
     app.post("/addJobs", async (req, res) => {
@@ -148,7 +148,33 @@ async function run() {
       const result = await Sample.deleteOne(query)
       res.send(result)
     })
+// --------------------------------------------------------------------------------------------------------------------------
 
+    app.post('/addToProcess', async (req, res) =>{
+      const newJob = req.body
+      const query = {po: newJob.po}
+      try {
+        const existingJob = await HTLDelivery.findOne(query)
+        if (existingJob) {
+          res.status(400).json({
+            success: false,
+            message: 'job already exists'
+          })
+          return;
+        }
+        const result = await HTLDelivery.insertOne(newJob)
+        res.status(200).json({
+          success: true,
+          message: 'job added successfully',
+          result
+        })
+      } catch (error) {
+        res.statusCode(500).json({
+          message: 'failed to add job',
+          error: error
+        })
+      }
+    })
 
     // handle delivery
     app.put("/markDelivered/:id", async (req, res) => {
