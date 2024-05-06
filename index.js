@@ -85,16 +85,22 @@ async function run() {
       const result = await User.deleteOne(query);
       res.send(result)
     })
-// --------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------
 
     // add jobs
     app.post("/addJobs", async (req, res) => {
       const newJob = req.body;
       // Check if the job with the same 'po' already exists
       const existingJob = await Delivered.findOne({ po: newJob.po });
+      const existing = await HTLDelivery.findOne({ po: newJob.po });
       if (existingJob) {
         res.status(400).send("Job with this PO already exists.");
         return;
+      }
+
+      if (existing) {
+        const res = await HTLDelivery.deleteOne({ po: newJob.po });
+        res.status(400).send("This job is in proccessing");
       }
 
       const currentDate = new Date();
@@ -113,9 +119,13 @@ async function run() {
 
     // display the delivery lists
     app.get("/delivery", async (req, res) => {
-      const allDelivery = await HTLDelivery.find().sort({ JobAddDate: -1 }).toArray()
-      res.send(allDelivery)
-    })
+      try {
+        const allDelivery = await HTLDelivery.find().sort({ _id: -1 }).toArray();
+        res.send(allDelivery);
+      } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching delivery data' });
+      }
+    });
 
     // ---------------------------------------------------------------------------------------------------
     app.get('/sample', async (req, res) => {
@@ -148,20 +158,23 @@ async function run() {
       const result = await Sample.deleteOne(query)
       res.send(result)
     })
-// --------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------
 
-    app.post('/addToProcess', async (req, res) =>{
+    app.post('/addToProcess', async (req, res) => {
       const newJob = req.body
-      const query = {po: newJob.po}
+      const query = { po: newJob.po }
       try {
         const existingJob = await HTLDelivery.findOne(query)
-        if (existingJob) {
+        const delivered = await Delivered.findOne(query)
+        if (existingJob || delivered) {
           res.status(400).json({
             success: false,
             message: 'job already exists'
           })
           return;
         }
+
+
         const result = await HTLDelivery.insertOne(newJob)
         res.status(200).json({
           success: true,
@@ -176,10 +189,62 @@ async function run() {
       }
     })
 
+    // refresh
+    app.get('/refresh', async (req, res) => {
+      try {
+        const delivered = await Delivered.find().toArray();
+        const proccessing = await HTLDelivery.find().toArray();
+
+        const matchingPOs = proccessing.map(item => item.po);
+        const deletePromises = [];
+        const deletedItems = [];
+
+        delivered.forEach(deliveredItem => {
+          if (matchingPOs.includes(deliveredItem.po)) {
+            const matchedProcessingItem = proccessing.find(item => item.po === deliveredItem.po);
+            if (!matchedProcessingItem || !matchedProcessingItem.hasOwnProperty("deliveryType")) {
+              const deletedItem = {
+                po: deliveredItem.po,
+                qty: deliveredItem.qty
+              };
+              deletedItems.push(deletedItem);
+              deletePromises.push(HTLDelivery.deleteOne({ po: deliveredItem.po }));
+            }
+          }
+        });
+
+        // Execute all delete operations
+        await Promise.all(deletePromises);
+
+        res.status(200).json({ message: 'Data refreshed successfully', deletedItems });
+      } catch (error) {
+        res.status(500).json({ error: 'An error occurred while refreshing data' });
+      }
+    });
+
+
+
+
+
+    // search
+
+    app.get('/search/:po', async (req, res) => {
+      const po = req.params.po;
+      const query = { po: po };
+      try {
+        const result = await HTLDelivery.find(query).exec(); // Use exec() to return a Promise
+        res.send(result);
+      } catch (error) {
+        res.send(error);
+      }
+    });
+
+
     // handle delivery
     app.put("/markDelivered/:id", async (req, res) => {
       const jobId = req.params.id;
       const query = { _id: new ObjectId(jobId) };
+      const po = req.body.po;
       try {
         // Find the job in HTLDelivery collection
         const job = await HTLDelivery.findOne(query);
@@ -189,7 +254,7 @@ async function run() {
         }
 
         // Check if the job with the same _id already exists in Delivered collection
-        const existingDeliveredJob = await Delivered.findOne(query);
+        const existingDeliveredJob = await Delivered.findOne({ po });
         if (existingDeliveredJob) {
           res.status(400).send("Job is already marked as delivered.");
           return;
@@ -247,7 +312,7 @@ async function run() {
         // Create the partial delivery document
         const partialDelivery = {
           _id: partialDeliveryId,
-          customar: job.customar,
+          customer: job.customer,
           po: job.po,
           qty: partialDeliveryQty, // Use the partial delivery quantity
           label: job.label,
@@ -319,27 +384,76 @@ async function run() {
 
     // handle all Delivered Job List
     app.get("/delivered", async (req, res) => {
-      const result = await Delivered.find().toArray()
+      const searchTerm = req.query.searchTerm; // Assuming the search term is provided in the query parameter
+      const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+      const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items per page if not provided
+      try {
 
-      res.send(result);
+        let query = {};
+        if (searchTerm) {
+          query = {
+            $or: [
+              { customar: { $regex: searchTerm, $options: 'i' } },
+              { po: { $regex: searchTerm, $options: 'i' } },
+              { label: { $regex: searchTerm, $options: 'i' } },
+              { goodsDeliveryDate: { $regex: searchTerm, $options: 'i' } }
+            ]
+          };
+        } // Constructing the MongoDB query
+        const totalItems = await Delivered.countDocuments(query); // Count total items for pagination
+        const total = await Delivered.find().toArray();
+
+        const totalQty = total.reduce((accumulator, currentJob) => {
+          const qtyAsNumber = parseInt(currentJob.qty); // Convert the string to an integer
+          if (!isNaN(qtyAsNumber)) {
+            return accumulator + qtyAsNumber;
+          }
+          return accumulator; // If conversion fails, return the accumulator unchanged
+        }, 0);
+
+        // Calculate pagination values
+        const totalPages = Math.ceil(totalItems / limit);
+        const offset = (page - 1) * limit;
+
+        const deliveredItems = await Delivered.find(query)
+          .sort({ _id: -1 })
+          .skip(offset)
+          .limit(limit)
+          .toArray(); // Fetching items based on the query, limit, and offset
+
+        const currentTQty = deliveredItems.reduce((accumulator, currentJob) => {
+          const qtyAsNumber = parseInt(currentJob.qty); // Convert the string to an integer
+          if (!isNaN(qtyAsNumber)) {
+            return accumulator + qtyAsNumber;
+          }
+          return accumulator; // If conversion fails, return the accumulator unchanged
+        }, 0);
+        // console.log(deliveredItems)
+        res.json({
+          totalPages,
+          currentPage: page,
+          totalItems,
+          deliveredItems,
+          totalQty,
+          currentTQty
+        });
+      } catch (error) {
+        res.status(500).send(error.message); // Handle error
+      }
     });
-    // app.get("/delivered", async (req, res) => {
-    //   const { month } = req.query;
-    //   let filteredDeliveredJobs;
 
-    //   console.log(month);
-    //   if (month) {
-    //     // If the month query parameter is provided, filter delivered jobs by the selected month
-    //     filteredDeliveredJobs = await Delivered.find({
-    //       goodsDeliveryDate: { $regex: new RegExp(`\\d{2}-(0?${month})-\\d{4}`), },
-    //     }).toArray();
-    //   } else {
-    //     // If no month is specified, fetch all delivered jobs
-    //     filteredDeliveredJobs = await Delivered.find().sort({ goodsDeliveryDate: -1 }).toArray();
-    //   }
-
-    //   res.send(filteredDeliveredJobs);
-    // });
+    app.get('/getAllDelivered', async (req, res) => {
+      try {
+        const delivered = await Delivered.find().sort({ _id: -1 }).toArray();
+        res.status(200).json({
+          success: true,
+          message: "Delivered jobs fetched successfully",
+          data: delivered
+        })
+      } catch (error) {
+        res.status(500).json({ success: false, message: error.message, error: error })
+      }
+    })
 
 
 
