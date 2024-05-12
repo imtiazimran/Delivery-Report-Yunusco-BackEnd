@@ -100,7 +100,7 @@ async function run() {
 
       if (existing) {
         const res = await HTLDelivery.deleteOne({ po: newJob.po });
-        res.status(200).send(res);
+   
       }
 
       const currentDate = new Date();
