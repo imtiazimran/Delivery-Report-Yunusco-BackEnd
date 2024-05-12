@@ -100,7 +100,7 @@ async function run() {
 
       if (existing) {
         const res = await HTLDelivery.deleteOne({ po: newJob.po });
-   
+
       }
 
       const currentDate = new Date();
@@ -114,7 +114,7 @@ async function run() {
         ...newJob,
         JobAddDate,
       });
-      res.send(result);
+      res.status(200).json({ success: true, message: "Job added successfully", result });
     });
 
     // display the delivery lists
@@ -355,7 +355,7 @@ async function run() {
           deliveryType: "partial"
         })
 
-        res.send("Partial delivery marked successfully.");
+        res.status(200).json({success: true, message: "Partial delivery marked successfully."});
       } catch (error) {
         console.error("Error marking partial delivery:", error);
         res.status(500).send("Internal server error.");
